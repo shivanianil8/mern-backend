@@ -1,0 +1,17 @@
+import express from 'express'
+import {
+  userSign,
+  userLogin,
+  updateProfile,
+  getProfile
+} from '../controllers/userController.js'
+import protect from '../middleware/authMiddleware.js'
+
+const authRoutes = express.Router()
+
+authRoutes.post('/signup',  userSign)
+authRoutes.post('/login',   userLogin)
+authRoutes.get('/profile',  protect, getProfile)
+authRoutes.put('/profile',  protect, updateProfile)
+
+export default authRoutes
