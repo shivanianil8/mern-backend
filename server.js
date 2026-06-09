@@ -13,7 +13,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://mern-frontend-alpha-nine.vercel.app'
+    'https://mern-frontend-alpha-nine.vercel.app',
+    'https://mern-frontend-alpha-beige.vercel.app'
   ],
   credentials: true
 }))
@@ -35,4 +36,4 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-})
+})cd "C:\Users\HP\Downloads\mern practice\INTERNSHIP\MERN PROJECT\BACKEND"
