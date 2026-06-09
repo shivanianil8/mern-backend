@@ -4,10 +4,23 @@ const userSchema = new mongoose.Schema({
   name:     { type: String, required: true },
   email:    { type: String, required: true, unique: true },
   password: { type: String, required: true },
+
+  // Profile
   phone:    { type: String, default: '' },
   address:  { type: String, default: '' },
   avatar:   { type: String, default: '' },
-  isProfileComplete: { type: Boolean, default: false }
+  isProfileComplete: { type: Boolean, default: false },
+
+  // Role system
+  role:         { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
+  activeMode:   { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
+
+  // Seller info
+  shopName:        { type: String, default: '' },
+  shopDescription: { type: String, default: '' },
+  shopLogo:        { type: String, default: '' },
+  isSeller:        { type: Boolean, default: false }
+
 }, { timestamps: true })
 
 export default mongoose.model('User', userSchema)

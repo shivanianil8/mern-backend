@@ -11,7 +11,6 @@ export const userSign = async (req, res) => {
   try {
     const { name, email, password } = req.body
 
-    // Backend validation
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' })
     }
@@ -43,7 +42,11 @@ export const userSign = async (req, res) => {
     res.status(201).json({
       message: 'Signup successful',
       token: generateToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email }
+      user: {
+        id: user._id, name: user.name,
+        email: user.email, role: user.role,
+        activeMode: user.activeMode, isSeller: user.isSeller
+      }
     })
 
   } catch (err) {
@@ -56,7 +59,6 @@ export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    // Backend validation
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' })
     }
@@ -81,9 +83,23 @@ export const userLogin = async (req, res) => {
     res.status(200).json({
       message: 'Login successful',
       token: generateToken(user._id),
-      user: { id: user._id, name: user.name, email: user.email }
+      user: {
+        id: user._id, name: user.name,
+        email: user.email, role: user.role,
+        activeMode: user.activeMode, isSeller: user.isSeller
+      }
     })
 
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/auth/profile
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password')
+    res.status(200).json({ user })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -94,7 +110,6 @@ export const updateProfile = async (req, res) => {
   try {
     const { phone, address, avatar } = req.body
 
-    // Backend validation
     if (phone) {
       const phoneRegex = /^[0-9]{10}$/
       if (!phoneRegex.test(phone)) {
@@ -106,9 +121,6 @@ export const updateProfile = async (req, res) => {
     }
     if (address && address.trim().length > 100) {
       return res.status(400).json({ message: 'Address must be less than 100 characters' })
-    }
-    if (avatar && avatar.length > 200) {
-      return res.status(400).json({ message: 'Avatar URL too long' })
     }
 
     const updated = await User.findByIdAndUpdate(
@@ -124,11 +136,59 @@ export const updateProfile = async (req, res) => {
   }
 }
 
-// GET /api/auth/profile
-export const getProfile = async (req, res) => {
+// POST /api/auth/become-seller
+export const becomeSeller = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password')
-    res.status(200).json({ user })
+    const { shopName, shopDescription, shopLogo } = req.body
+
+    if (!shopName || shopName.trim().length < 2) {
+      return res.status(400).json({ message: 'Shop name must be at least 2 characters' })
+    }
+    if (!shopDescription || shopDescription.trim().length < 10) {
+      return res.status(400).json({ message: 'Shop description must be at least 10 characters' })
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        isSeller: true,
+        role: 'seller',
+        activeMode: 'seller',
+        shopName: shopName.trim(),
+        shopDescription: shopDescription.trim(),
+        shopLogo: shopLogo || ''
+      },
+      { new: true }
+    ).select('-password')
+
+    res.status(200).json({ message: 'You are now a seller!', user: updated })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// PUT /api/auth/switch-mode
+export const switchMode = async (req, res) => {
+  try {
+    const { mode } = req.body
+
+    if (!['buyer', 'seller'].includes(mode)) {
+      return res.status(400).json({ message: 'Invalid mode' })
+    }
+
+    if (mode === 'seller' && !req.user.isSeller) {
+      return res.status(400).json({ message: 'You are not a seller yet' })
+    }
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { activeMode: mode },
+      { new: true }
+    ).select('-password')
+
+    res.status(200).json({ message: `Switched to ${mode} mode`, user: updated })
+
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
