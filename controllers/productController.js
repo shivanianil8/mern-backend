@@ -18,8 +18,8 @@ export const addProduct = async (req, res) => {
       return res.status(400).json({ message: 'Price must be a positive number' })
     }
 
-    // Get image path if uploaded
-    const image = req.file ? `/uploads/${req.file.filename}` : ''
+    // Cloudinary gives full URL in req.file.path
+    const image = req.file ? req.file.path : ''
 
     const product = await Product.create({
       name: name.trim(),
@@ -72,8 +72,8 @@ export const editProduct = async (req, res) => {
       return res.status(401).json({ message: 'Not your product' })
     }
 
-    // Update image if new one uploaded
-    const image = req.file ? `/uploads/${req.file.filename}` : product.image
+    // Cloudinary gives full URL — keep old image if no new one uploaded
+    const image = req.file ? req.file.path : product.image
 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
