@@ -2,7 +2,11 @@ import User from '../models/user.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-import { sendVerificationEmail, sendWelcomeEmail } from '../utils/sendEmail.js'
+import {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendPasswordResetEmail
+} from '../utils/sendEmail.js'
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
@@ -39,8 +43,6 @@ export const userSign = async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10)
-
-    // Generate verification token
     const verificationToken  = crypto.randomBytes(32).toString('hex')
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
@@ -49,15 +51,11 @@ export const userSign = async (req, res) => {
       verificationToken, verificationExpiry
     })
 
-    // Send verification email
     await sendVerificationEmail(email, name, verificationToken)
 
     res.status(201).json({
       message: 'Signup successful! Please check your email to verify your account.',
-      user: {
-        id: user._id, name: user.name,
-        email: user.email, isVerified: user.isVerified
-      }
+      user: { id: user._id, name: user.name, email: user.email, isVerified: user.isVerified }
     })
 
   } catch (err) {
@@ -133,9 +131,8 @@ export const userLogin = async (req, res) => {
       message: 'Login successful',
       token: generateToken(user._id),
       user: {
-        id: user._id, name: user.name,
-        email: user.email, role: user.role,
-        activeMode: user.activeMode, isSeller: user.isSeller
+        id: user._id, name: user.name, email: user.email,
+        role: user.role, activeMode: user.activeMode, isSeller: user.isSeller
       }
     })
 
@@ -200,9 +197,7 @@ export const becomeSeller = async (req, res) => {
     const updated = await User.findByIdAndUpdate(
       req.user._id,
       {
-        isSeller: true,
-        role: 'seller',
-        activeMode: 'seller',
+        isSeller: true, role: 'seller', activeMode: 'seller',
         shopName: shopName.trim(),
         shopDescription: shopDescription.trim(),
         shopLogo: shopLogo || ''
@@ -225,7 +220,6 @@ export const switchMode = async (req, res) => {
     if (!['buyer', 'seller'].includes(mode)) {
       return res.status(400).json({ message: 'Invalid mode' })
     }
-
     if (mode === 'seller' && !req.user.isSeller) {
       return res.status(400).json({ message: 'You are not a seller yet' })
     }
@@ -237,6 +231,67 @@ export const switchMode = async (req, res) => {
     ).select('-password')
 
     res.status(200).json({ message: `Switched to ${mode} mode`, user: updated })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// POST /api/auth/forgot-password
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' })
+    }
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(404).json({ message: 'No account found with this email' })
+    }
+
+    const resetToken  = crypto.randomBytes(32).toString('hex')
+    const resetExpiry = new Date(Date.now() + 60 * 60 * 1000)
+
+    user.resetPasswordToken  = resetToken
+    user.resetPasswordExpiry = resetExpiry
+    await user.save()
+
+    await sendPasswordResetEmail(email, user.name, resetToken)
+
+    res.status(200).json({ message: 'Password reset link sent to your email' })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// POST /api/auth/reset-password/:token
+export const resetPassword = async (req, res) => {
+  try {
+    const { token }    = req.params
+    const { password } = req.body
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' })
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken:  token,
+      resetPasswordExpiry: { $gt: Date.now() }
+    })
+
+    if (!user) {
+      return res.status(400).json({ message: 'Reset link is invalid or expired' })
+    }
+
+    user.password            = await bcrypt.hash(password, 10)
+    user.resetPasswordToken  = ''
+    user.resetPasswordExpiry = null
+    await user.save()
+
+    res.status(200).json({ message: 'Password reset successful! You can now login.' })
 
   } catch (err) {
     res.status(500).json({ message: err.message })

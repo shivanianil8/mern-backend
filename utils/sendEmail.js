@@ -66,3 +66,34 @@ export const sendWelcomeEmail = async (email, name) => {
 
   await transporter.sendMail(mailOptions)
 }
+
+export const sendPasswordResetEmail = async (email, name, token) => {
+  const resetURL = `https://mern-frontend-alpha-beige.vercel.app/reset-password/${token}`
+
+  const mailOptions = {
+    from: '"Vyorra" <noreply@vyorra.com>',
+    to: email,
+    subject: 'Reset your Vyorra password',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 2rem; border-radius: 16px;">
+        <h1 style="color: #ffffff; letter-spacing: 4px; text-transform: uppercase;">VYORRA</h1>
+        <h2 style="color: #ffffff;">Reset your password</h2>
+        <p style="color: #a0a0a0; line-height: 1.7;">
+          Hi ${name}, we received a request to reset your password.
+          Click the button below to create a new password.
+        </p>
+        <a href="${resetURL}"
+          style="display: inline-block; background: #7c3aed; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; margin: 1.5rem 0;">
+          Reset Password
+        </a>
+        <p style="color: #555555; font-size: 0.85rem;">
+          This link expires in 1 hour. If you didn't request this, ignore this email.
+        </p>
+        <hr style="border-color: #222222; margin: 2rem 0;" />
+        <p style="color: #555555; font-size: 0.8rem;">© 2026 Vyorra. All rights reserved.</p>
+      </div>
+    `
+  }
+
+  await transporter.sendMail(mailOptions)
+}

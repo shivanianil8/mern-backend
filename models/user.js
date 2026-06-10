@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
   verificationToken:  { type: String, default: '' },
   verificationExpiry: { type: Date },
 
+  // Password reset
+  resetPasswordToken:  { type: String, default: '' },
+  resetPasswordExpiry: { type: Date },
+
   // Role system
   role:       { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
   activeMode: { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
