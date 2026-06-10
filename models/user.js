@@ -1,34 +1,51 @@
 import mongoose from 'mongoose'
 
 const userSchema = new mongoose.Schema({
-  name:     { type: String, required: true },
-  email:    { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 
   // Profile
-  phone:    { type: String, default: '' },
-  address:  { type: String, default: '' },
-  avatar:   { type: String, default: '' },
+  phone: { type: String, default: '' },
+  address: { type: String, default: '' },
+  avatar: { type: String, default: '' },
   isProfileComplete: { type: Boolean, default: false },
 
   // Email verification
-  isVerified:         { type: Boolean, default: false },
-  verificationToken:  { type: String, default: '' },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String, default: '' },
   verificationExpiry: { type: Date },
 
   // Password reset
-  resetPasswordToken:  { type: String, default: '' },
+  resetPasswordToken: { type: String, default: '' },
   resetPasswordExpiry: { type: Date },
 
   // Role system
-  role:       { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
-  activeMode: { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
+  role: {
+    type: String,
+    enum: ['buyer', 'seller'],
+    default: 'buyer'
+  },
+
+  activeMode: {
+    type: String,
+    enum: ['buyer', 'seller'],
+    default: 'buyer'
+  },
 
   // Seller info
-  shopName:        { type: String, default: '' },
+  shopName: { type: String, default: '' },
   shopDescription: { type: String, default: '' },
-  shopLogo:        { type: String, default: '' },
-  isSeller:        { type: Boolean, default: false }
+  shopLogo: { type: String, default: '' },
+  isSeller: { type: Boolean, default: false },
+
+  // Wishlist ❤️
+  wishlist: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    }
+  ]
 
 }, { timestamps: true })
 

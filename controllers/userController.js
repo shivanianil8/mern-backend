@@ -1,4 +1,5 @@
 import User from '../models/user.js'
+import Product from '../models/product.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
@@ -292,6 +293,67 @@ export const resetPassword = async (req, res) => {
     await user.save()
 
     res.status(200).json({ message: 'Password reset successful! You can now login.' })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/auth/wishlist
+export const getWishlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate('wishlist')
+
+    res.status(200).json({ wishlist: user.wishlist })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// POST /api/auth/wishlist/:productId
+export const addToWishlist = async (req, res) => {
+  try {
+    const { productId } = req.params
+
+    const product = await Product.findById(productId)
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' })
+    }
+
+    const user = await User.findById(req.user._id)
+
+    const alreadyExists = user.wishlist.some(
+      id => id.toString() === productId
+    )
+
+    if (!alreadyExists) {
+      user.wishlist.push(productId)
+      await user.save()
+    }
+
+    res.status(200).json({ message: 'Added to wishlist' })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// DELETE /api/auth/wishlist/:productId
+export const removeFromWishlist = async (req, res) => {
+  try {
+    const { productId } = req.params
+
+    const user = await User.findById(req.user._id)
+
+    user.wishlist = user.wishlist.filter(
+      id => id.toString() !== productId
+    )
+
+    await user.save()
+
+    res.status(200).json({ message: 'Removed from wishlist' })
 
   } catch (err) {
     res.status(500).json({ message: err.message })
