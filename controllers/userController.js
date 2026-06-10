@@ -1,6 +1,8 @@
 import User from '../models/user.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
+import { sendVerificationEmail, sendWelcomeEmail } from '../utils/sendEmail.js'
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
@@ -37,17 +39,60 @@ export const userSign = async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10)
-    const user = await User.create({ name, email, password: hashed })
+
+    // Generate verification token
+    const verificationToken  = crypto.randomBytes(32).toString('hex')
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+    const user = await User.create({
+      name, email, password: hashed,
+      verificationToken, verificationExpiry
+    })
+
+    // Send verification email
+    await sendVerificationEmail(email, name, verificationToken)
 
     res.status(201).json({
-      message: 'Signup successful',
-      token: generateToken(user._id),
+      message: 'Signup successful! Please check your email to verify your account.',
       user: {
         id: user._id, name: user.name,
-        email: user.email, role: user.role,
-        activeMode: user.activeMode, isSeller: user.isSeller
+        email: user.email, isVerified: user.isVerified
       }
     })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/auth/verify-email/:token
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params
+
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationExpiry: { $gt: Date.now() }
+    })
+
+    if (!user) {
+      return res.status(400).send(`
+        <div style="font-family: Arial; text-align: center; padding: 4rem; background: #0a0a0a; color: white; min-height: 100vh;">
+          <h1 style="color: #ef4444;">Link Expired</h1>
+          <p style="color: #a0a0a0;">This verification link has expired or is invalid.</p>
+          <a href="https://mern-frontend-alpha-beige.vercel.app/signup" style="color: #7c3aed;">Sign up again</a>
+        </div>
+      `)
+    }
+
+    user.isVerified         = true
+    user.verificationToken  = ''
+    user.verificationExpiry = null
+    await user.save()
+
+    await sendWelcomeEmail(user.email, user.name)
+
+    res.redirect('https://mern-frontend-alpha-beige.vercel.app/login?verified=true')
 
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -73,6 +118,10 @@ export const userLogin = async (req, res) => {
     const user = await User.findOne({ email })
     if (!user) {
       return res.status(404).json({ message: 'User not found' })
+    }
+
+    if (!user.isVerified) {
+      return res.status(401).json({ message: 'Please verify your email before logging in' })
     }
 
     const isMatch = await bcrypt.compare(password, user.password)

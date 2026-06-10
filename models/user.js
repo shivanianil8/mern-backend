@@ -11,9 +11,14 @@ const userSchema = new mongoose.Schema({
   avatar:   { type: String, default: '' },
   isProfileComplete: { type: Boolean, default: false },
 
+  // Email verification
+  isVerified:         { type: Boolean, default: false },
+  verificationToken:  { type: String, default: '' },
+  verificationExpiry: { type: Date },
+
   // Role system
-  role:         { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
-  activeMode:   { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
+  role:       { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
+  activeMode: { type: String, enum: ['buyer', 'seller'], default: 'buyer' },
 
   // Seller info
   shopName:        { type: String, default: '' },
