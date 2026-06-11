@@ -36,6 +36,16 @@ const productSchema = new mongoose.Schema({
     required: true
   },
 
+  openToSwap: {
+  type: Boolean,
+  default: false
+},
+
+swapPreferences: {
+  type: String,
+  default: ''
+},
+
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
