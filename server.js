@@ -8,6 +8,7 @@ import authRoutes from './routes/userRoutes.js'
 import productRoutes from './routes/productRoutes.js'
 import swapRoutes from './routes/swapRoutes.js'
 import rentalRoutes from './routes/rentalRoutes.js'
+import orderRoutes from './routes/orderRoutes.js'
 
 dotenv.config()
 
@@ -38,6 +39,7 @@ app.use('/api/auth',     authRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/swaps',    swapRoutes)
 app.use('/api/rentals',  rentalRoutes)
+app.use('/api/orders',   orderRoutes)
 
 mongoose
   .connect(process.env.MONGO_URI)
