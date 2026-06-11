@@ -18,7 +18,7 @@ const productSchema = new mongoose.Schema({
 
   description: {
     type: String,
-    required: true
+    default: ''
   },
 
   category: {
@@ -33,18 +33,18 @@ const productSchema = new mongoose.Schema({
       'Beauty',
       'Other'
     ],
-    required: true
+    default: 'Other'
   },
 
   openToSwap: {
-  type: Boolean,
-  default: false
-},
+    type: Boolean,
+    default: false
+  },
 
-swapPreferences: {
-  type: String,
-  default: ''
-},
+  swapPreferences: {
+    type: String,
+    default: ''
+  },
 
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
