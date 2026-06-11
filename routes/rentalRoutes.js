@@ -1,20 +1,15 @@
 import express from 'express'
 import protect from '../middleware/authMiddleware.js'
+import {
+  createRental,
+  getMyRentals,
+  getIncomingRentals
+} from '../controllers/rentalController.js'
 
 const rentalRoutes = express.Router()
 
-// Temporary placeholder routes
-
-rentalRoutes.get('/', protect, (req, res) => {
-  res.status(200).json({
-    message: 'Rental routes working'
-  })
-})
-
-rentalRoutes.post('/', protect, (req, res) => {
-  res.status(200).json({
-    message: 'Create rental route working'
-  })
-})
+rentalRoutes.post('/',          protect, createRental)
+rentalRoutes.get('/my',         protect, getMyRentals)
+rentalRoutes.get('/incoming',   protect, getIncomingRentals)
 
 export default rentalRoutes
