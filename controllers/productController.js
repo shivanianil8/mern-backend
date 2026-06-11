@@ -5,7 +5,8 @@ export const addProduct = async (req, res) => {
   try {
     const {
       name, price, description, category,
-      openToSwap, swapPreferences
+      openToSwap, swapPreferences,
+      rentAvailable, rentPrice, rentPer
     } = req.body
 
     if (!name || !price || !description || !category) {
@@ -37,8 +38,11 @@ export const addProduct = async (req, res) => {
       description: description.trim(),
       category,
       image,
-      openToSwap: openToSwap === true || openToSwap === "true",
+      openToSwap:      openToSwap === true || openToSwap === "true",
       swapPreferences: swapPreferences?.trim() || "",
+      rentAvailable:   rentAvailable === true || rentAvailable === "true",
+      rentPrice:       rentPrice ? Number(rentPrice) : 0,
+      rentPer:         rentPer || "day",
       addedBy: req.user._id
     })
 
@@ -85,7 +89,8 @@ export const editProduct = async (req, res) => {
   try {
     const {
       name, price, description, category,
-      openToSwap, swapPreferences
+      openToSwap, swapPreferences,
+      rentAvailable, rentPrice, rentPer
     } = req.body
 
     if (!name || !price || !description || !category) {
@@ -123,8 +128,11 @@ export const editProduct = async (req, res) => {
         description: description.trim(),
         category,
         image,
-        openToSwap: openToSwap === true || openToSwap === "true",
-        swapPreferences: swapPreferences?.trim() || ""
+        openToSwap:      openToSwap === true || openToSwap === "true",
+        swapPreferences: swapPreferences?.trim() || "",
+        rentAvailable:   rentAvailable === true || rentAvailable === "true",
+        rentPrice:       rentPrice ? Number(rentPrice) : 0,
+        rentPer:         rentPer || "day"
       },
       { new: true }
     )
