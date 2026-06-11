@@ -359,3 +359,25 @@ export const removeFromWishlist = async (req, res) => {
     res.status(500).json({ message: err.message })
   }
 }
+
+// POST /api/auth/upload-avatar
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' })
+    }
+
+    const avatar = req.file.path
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar },
+      { new: true }
+    ).select('-password')
+
+    res.status(200).json({ message: 'Avatar updated', avatar, user: updated })
+
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
